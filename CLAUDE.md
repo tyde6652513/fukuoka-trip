@@ -18,11 +18,13 @@
 
 | 區塊 | 大約行號 | 說明 |
 |---|---|---|
-| `<style>` | 10–159 | 全部 CSS（含深色模式） |
-| `#view-it` 行程頁 | 172–292 | 7 個 `<section class="it-day">`，靜態 HTML |
-| `#view-shop` 購物頁 | 294–317 | 日期切換列、進度條、`<main id="list">`（由 JS 渲染） |
-| `#overlay` | 320–327 | 放大照片／型號給店員看的全螢幕視窗 |
-| `<script>` | 329–480 | `IMG`、`ITEMS`、`PLAN` 資料 + 渲染邏輯 |
+| `<style>` | 10–164 | 全部 CSS（含深色模式；遊戲樣式在 `/* 跳跳小遊戲 */`） |
+| `#game` 跳跳小遊戲 | 169 | header 最上方、標題上面的 `<canvas id="gc">` |
+| `#view-it` 行程頁 | 178–298 | 7 個 `<section class="it-day">`，靜態 HTML |
+| `#view-shop` 購物頁 | 300–323 | 日期切換列、進度條、`<main id="list">`（由 JS 渲染） |
+| `#overlay` | 326–333 | 放大照片／型號給店員看的全螢幕視窗 |
+| 第 1 個 `<script>` | 335–488 | `IMG`、`ITEMS`、`PLAN` 資料 + 渲染邏輯 |
+| 第 2 個 `<script>` | 489–655 | 跳跳小遊戲（獨立 IIFE，`RUNNER` 為人物去背 PNG base64） |
 
 ## 設計系統
 
@@ -72,6 +74,20 @@
   - 新增日期時要同步：`PLAN`、`DAYS` 陣列、`.days` 按鈕列（目前 4 欄 grid）、行程頁的 `it-go` 按鈕
 - 勾選狀態存在 `localStorage`，key：`fukuoka-shopping-v1`
 - 網址 hash：`#shop`、`#d1120` 等可直接開到購物頁指定日期
+
+## 跳跳小遊戲（`#game`）
+
+- Canvas 繪製，邏輯尺寸高 170px、寬度跟容器；顏色每次從 CSS 變數讀取（`colors()`），跟著深色模式切換
+- **只在遊戲框內**用 `pointerdown` 觸發跳躍（滑鼠左鍵／觸控），不支援鍵盤；`touch-action:manipulation` 保留頁面捲動
+- 狀態：`ready` → `running` → `over`（400ms 內不重開，避免誤觸）；捲出畫面或切換分頁會 `paused`
+- 障礙物：明太子、拉麵、鳥居（分數 60 以上才出現鳥居），用 canvas 路徑畫，定義在 `TYPES` 和 `drawXxx()`
+- 主要參數：`PH`（人物高）、`G`（重力）、`JUMP`（起跳速度，跳高約 `JUMP²/2G`）、速度 330→720 px/s
+- 最高分存在 `localStorage`，key：`fukuoka-jump-hi`
+- 人物圖來源 `pic_1.jpg`（已加入 .gitignore，不提交），去背後裁切成 61×200 PNG 嵌入
+
+## GitHub Pages
+
+網頁發布在 GitHub Pages（repo：`tyde6652513/fukuoka-trip`），網址路徑為 `/fukuoka-trip/fukuoka-trip.html`。只能使用靜態資源（無後端），外部資源只有 Google Fonts。
 
 ## 驗證
 
