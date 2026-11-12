@@ -24,7 +24,9 @@
 | `#view-shop` 購物頁 | 300–323 | 日期切換列、進度條、`<main id="list">`（由 JS 渲染） |
 | `#overlay` | 326–333 | 放大照片／型號給店員看的全螢幕視窗 |
 | 第 1 個 `<script>` | 335–488 | `IMG`、`ITEMS`、`PLAN` 資料 + 渲染邏輯 |
-| 第 2 個 `<script>` | 489–655 | 跳跳小遊戲（獨立 IIFE，`RUNNER` 為人物去背 PNG base64） |
+| 第 2 個 `<script>` | 489–696 | 跳跳小遊戲（獨立 IIFE，`RUNNER`／`FRIEND` 為人物去背 PNG base64） |
+
+> 單一檔案是**刻意的**：可能有人用手機直接改這個檔案。不要主動拆檔；使用者說「檔案結構優化」時才拆（方案見記憶）。
 
 ## 設計系統
 
@@ -80,10 +82,14 @@
 - Canvas 繪製，邏輯尺寸高 170px、寬度跟容器；顏色每次從 CSS 變數讀取（`colors()`），跟著深色模式切換
 - **只在遊戲框內**用 `pointerdown` 觸發跳躍（滑鼠左鍵／觸控），不支援鍵盤；`touch-action:manipulation` 保留頁面捲動
 - 狀態：`ready` → `running` → `over`（400ms 內不重開，避免誤觸）；捲出畫面或切換分頁會 `paused`
-- 障礙物：明太子、拉麵、鳥居（分數 60 以上才出現鳥居），用 canvas 路徑畫，定義在 `TYPES` 和 `drawXxx()`
+- 障礙物定義在 `TYPES`（`min` 分數門檻、`pad` 碰撞框內縮），繪製函式登記在 `DRAW`：
+  - 明太子 `mentai`、拉麵 `ramen`、達磨 `daruma`：0 分起
+  - 招財貓 `neko`：20 分起
+  - 朋友 `friend`（pic_2 去背半身照，含比 YA 的手）：30 分起
+  - 鳥居 `torii`：60 分起
 - 主要參數：`PH`（人物高）、`G`（重力）、`JUMP`（起跳速度，跳高約 `JUMP²/2G`）、速度 330→720 px/s
 - 最高分存在 `localStorage`，key：`fukuoka-jump-hi`
-- 人物圖來源 `pic_1.jpg`（已加入 .gitignore，不提交），去背後裁切成 61×200 PNG 嵌入
+- 人物圖來源 `pic_1.jpg`（主角，61×200）、`pic_2.jpg`（障礙物，185×200），原圖已加入 .gitignore 不提交，只嵌入去背後的 PNG
 
 ## GitHub Pages
 
