@@ -11,7 +11,7 @@
 
 ## 檔案結構
 
-只有一個檔案：`fukuoka-trip.html`（約 900KB，UTF-8），沒有建置流程、沒有外部 JS，直接用瀏覽器開啟即可。
+只有一個檔案：`fukuoka-trip.html`（約 1MB，UTF-8），沒有建置流程、沒有外部 JS，直接用瀏覽器開啟即可。
 
 > ⚠️ 檔案內有多行 base64 圖片，單行可長達 10–24 萬字元（行程頁的 `<img class="it-scene it-photo">`，以及 `<script>` 內的 `const IMG = {...}`）。
 > 讀檔時請用行號範圍或 grep 避開這些行，不要整檔讀取；修改時用精確字串替換，不要動到 base64 內容。
@@ -22,6 +22,7 @@
 | `#game` 跳跳小遊戲 | 169 | header 最上方、標題上面的 `<canvas id="gc">` |
 | `#view-it` 行程頁 | 178–298 | 7 個 `<section class="it-day">`，靜態 HTML |
 | `#view-shop` 購物頁 | 300–323 | 日期切換列、進度條、`<main id="list">`（由 JS 渲染） |
+| `#view-info` 其他資訊頁 | 約 340 | 卡片式資訊（租車等），圖片為 base64 |
 | `#overlay` | 326–333 | 放大照片／型號給店員看的全螢幕視窗 |
 | 第 1 個 `<script>` | 335–488 | `IMG`、`ITEMS`、`PLAN` 資料 + 渲染邏輯 |
 | 第 2 個 `<script>` | 489–696 | 跳跳小遊戲（獨立 IIFE，`RUNNER`／`FRIEND` 為人物去背 PNG base64） |
@@ -76,6 +77,20 @@
   - 新增日期時要同步：`PLAN`、`DAYS` 陣列、`.days` 按鈕列（目前 4 欄 grid）、行程頁的 `it-go` 按鈕
 - 勾選狀態存在 `localStorage`，key：`fukuoka-shopping-v1`
 - 網址 hash：`#shop`、`#d1120` 等可直接開到購物頁指定日期
+
+## 其他資訊頁（`#view-info`）
+
+- 第三個頁籤「ℹ️ 其他資訊」，網址 hash `#info`；卡片沿用行程頁的 `it-day` 結構（左欄放 emoji＋分類名）
+- 條列用 `<ul class="info-list"><li>…</li></ul>`，小標題 `<div class="info-h">`
+- 圖片用 `<button class="info-pic"><img src="data:…" alt="說明"></button>`，點擊用 `#overlay` 的 `pic` 模式放大（隱藏品牌／型號／日文問句）
+- 目前內容：租車（tabirai、取車點、預約資訊截圖；截圖已遮蔽個資，原圖 `pic_*.png` 不提交）
+
+## 超連結（`LINKS` 連結表）
+
+- 第 1 個 `<script>` 最上方的 `const LINKS = { "頁面上的文字": "網址" }` 統一管理所有連結
+- `applyLinks()` 會把下列元素中**文字完全相同**的文字節點換成 `<a class="lk">`（新分頁開啟，CSS `::after` 自動加 🔗）：
+  `.it-route li`（路線地點）、`.it-meals dd`（餐廳名稱，不含 `it-alt`／`it-bk`）、`.info-list li`
+- 使用者寫 `文字 &Link:網址` 時，就是要在 `LINKS` 加一行；HTML 本身不用改
 
 ## 跳跳小遊戲（`#game`）
 
