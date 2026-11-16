@@ -118,6 +118,20 @@ footer button{font:inherit;font-size:13px;background:none;border:1px solid var(-
 .it-legend span{display:inline-flex;align-items:center;gap:6px}
 .it-sw{width:10px;height:10px;border-radius:3px;display:inline-block}
 
+.it-filter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:14px}
+.it-filter button{font:inherit;font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif;font-weight:700;font-size:13px;line-height:1;
+  display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  border-radius:999px;padding:7px 11px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.it-filter button[aria-pressed="true"]{background:var(--indigo);border-color:var(--indigo);color:var(--surface)}
+.it-filter button.it-shop[aria-pressed="true"]{background:var(--mentai);border-color:var(--mentai)}
+.it-filter button.it-drive[aria-pressed="true"]{background:var(--drive);border-color:var(--drive)}
+.it-filter .itf-all{color:var(--ink)}
+.it-filter .itf-all[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.itf-sep{width:1px;height:18px;background:var(--line);margin:0 3px}
+.it-empty{margin-top:22px;padding:22px 16px;text-align:center;color:var(--muted);font-size:14.5px;
+  border:1px dashed var(--line);border-radius:18px;background:var(--surface)}
+.it-day[hidden]{display:none}
+
 .it-days{display:flex;flex-direction:column;gap:14px;margin-top:22px}
 .it-day{display:grid;grid-template-columns:78px 1fr;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
 .it-date{padding:16px 0;text-align:center;background:var(--indigo-soft);color:var(--indigo);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px}
@@ -194,10 +208,19 @@ a.lk:focus-visible{outline:3px solid var(--mentai);outline-offset:2px;border-rad
   </header>
 
   <div id="view-it">
-<div class="it-facts">
+<div class="it-filter" id="itFilter" role="group" aria-label="篩選要顯示的日期">
+      <button class="itf-all" data-all aria-pressed="true">全部</button>
+      <span class="itf-sep" aria-hidden="true"></span>
+      <button data-day="1" aria-pressed="true">Day1</button>
+      <button class="it-shop" data-day="2" aria-pressed="true">Day2</button>
+      <button class="it-drive" data-day="3" aria-pressed="true">Day3</button>
+      <button class="it-drive" data-day="4" aria-pressed="true">Day4</button>
+      <button class="it-drive" data-day="5" aria-pressed="true">Day5</button>
+      <button class="it-shop" data-day="6" aria-pressed="true">Day6</button>
+      <button data-day="7" aria-pressed="true">Day7</button>
+    </div>
+    <div class="it-facts">
       <span><b>11/19（四）– 11/25（三）</b></span>
-      <span>住宿：Hotel NOVIA FUKUOKA（中央區春吉），六晚連住</span>
-      <span>3 人</span>
     </div>
     <div class="it-legend">
       <span><i class="it-sw" style="background:var(--mentai)"></i>購物日</span>
@@ -312,6 +335,7 @@ a.lk:focus-visible{outline:3px solid var(--mentai);outline-offset:2px;border-rad
     </section>
 
   </div>
+      <p class="it-empty" id="itEmpty" hidden>沒有選到任何一天，請在上面挑日期。</p>
       <p class="it-foot">訂位與時間以實際預約為準。</p>
   </div>
 
@@ -567,6 +591,25 @@ document.querySelectorAll(".views button").forEach(b => b.onclick = () => { view
 document.querySelectorAll(".it-go").forEach(b => b.onclick = () => { view = "shop"; day = b.dataset.go; setHash(); showView(); render(); window.scrollTo({top:0}); });
 document.getElementById("todo").onclick = e => { onlyTodo = !onlyTodo; e.currentTarget.setAttribute("aria-pressed", onlyTodo); render(); };
 document.getElementById("reset").onclick = () => { if (confirm("確定要清除所有勾選嗎？")){ done = {}; save(); render(); } };
+/* 行程頁日期篩選 */
+(() => {
+  const bar = document.getElementById("itFilter");
+  if (!bar) return;
+  const chips = [...bar.querySelectorAll("button[data-day]")];
+  const allBtn = bar.querySelector("[data-all]");
+  const sections = [...document.querySelectorAll("#view-it .it-days > .it-day")];
+  const empty = document.getElementById("itEmpty");
+  const isOn = b => b.getAttribute("aria-pressed") === "true";
+  function apply(){
+    const on = chips.filter(isOn).map(c => c.dataset.day);
+    sections.forEach((sec, i) => { sec.hidden = !on.includes(String(i+1)); });
+    allBtn.setAttribute("aria-pressed", on.length === chips.length);
+    empty.hidden = on.length > 0;
+  }
+  chips.forEach(c => c.onclick = () => { c.setAttribute("aria-pressed", !isOn(c)); apply(); });
+  allBtn.onclick = () => { const all = chips.every(isOn); chips.forEach(c => c.setAttribute("aria-pressed", !all)); apply(); };
+  apply();
+})();
 showView();
 render();
 </script>
