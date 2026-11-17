@@ -11,21 +11,23 @@
 
 ## 檔案結構
 
-只有一個檔案：`fukuoka-trip.html`（約 1MB，UTF-8），沒有建置流程、沒有外部 JS，直接用瀏覽器開啟即可。
+主要入口只有一個檔案：`fukuoka-trip.html`（約 1.4MB，UTF-8），沒有建置流程、沒有外部 JS，直接用瀏覽器開啟即可。
 
-> ⚠️ 檔案內有多行 base64 圖片，單行可長達 10–24 萬字元（行程頁的 `<img class="it-scene it-photo">`，以及 `<script>` 內的 `const IMG = {...}`）。
+> `index.html` 是別人給的版本，2026-11-17 已以它為主合併進 `fukuoka-trip.html`（行程、購物清單、成員頭像、購物依店家分組）。它只留在本地、已加入 .gitignore，**不要提交**。
+
+> ⚠️ 檔案內有多行 base64 圖片，單行可長達 10–40 萬字元（行程頁的 `<img class="it-scene it-photo">`、成員頭像 `.crew`、`const IMG = {...}`、`const AVBIG = {...}`）。
 > 讀檔時請用行號範圍或 grep 避開這些行，不要整檔讀取；修改時用精確字串替換，不要動到 base64 內容。
 
 | 區塊 | 大約行號 | 說明 |
 |---|---|---|
-| `<style>` | 10–164 | 全部 CSS（含深色模式；遊戲樣式在 `/* 跳跳小遊戲 */`） |
-| `#game` 跳跳小遊戲 | 169 | header 最上方、標題上面的 `<canvas id="gc">` |
-| `#view-it` 行程頁 | 178–298 | 7 個 `<section class="it-day">`，靜態 HTML |
-| `#view-shop` 購物頁 | 300–323 | 日期切換列、進度條、`<main id="list">`（由 JS 渲染） |
-| `#view-info` 其他資訊頁 | 約 340 | 卡片式資訊（租車等），圖片為 base64 |
-| `#overlay` | 326–333 | 放大照片／型號給店員看的全螢幕視窗 |
-| 第 1 個 `<script>` | 335–488 | `IMG`、`ITEMS`、`PLAN` 資料 + 渲染邏輯 |
-| 第 2 個 `<script>` | 489–696 | 跳跳小遊戲（獨立 IIFE，`RUNNER`／`FRIEND` 為人物去背 PNG base64） |
+| `<style>` | 10–216 | 全部 CSS（含深色模式；遊戲樣式在 `/* 跳跳小遊戲 */`） |
+| header | 220–234 | 遊戲 `#game` → 條紋 → 標題 → 成員頭像 `.crew` → 三個頁籤 `.views` |
+| `#view-it` 行程頁 | 236–369 | 日期篩選 `#itFilter`、7 個 `<section class="it-day">`，靜態 HTML |
+| `#view-shop` 購物頁 | 371–395 | 日期切換列（5 欄）、進度條、`<main id="list">`（由 JS 渲染） |
+| `#view-info` 其他資訊頁 | 397–424 | 卡片式資訊（租車、住宿），圖片為 base64 |
+| `#overlay` | 427–434 | 放大視窗：商品模式／成員圓形照片（`img.round`）／圖片模式（`.pic`） |
+| 第 1 個 `<script>` | 436–684 | `LINKS`、`IMG`、`ITEMS`、`PLAN`、`AVBIG`（成員大圖）+ 渲染邏輯 |
+| 第 2 個 `<script>` | 685–892 | 跳跳小遊戲（獨立 IIFE，`RUNNER`／`FRIEND` 為人物去背 PNG base64） |
 
 > 單一檔案是**刻意的**：可能有人用手機直接改這個檔案。不要主動拆檔；使用者說「檔案結構優化」時才拆（方案見記憶）。
 
@@ -57,7 +59,7 @@
     <div class="it-tags"><span class="it-tag [it-shop|it-drive]">…</span></div>
     <ul class="it-route"><li><span class="it-ic" aria-hidden="true">emoji</span>地點</li>…</ul>
     <dl class="it-meals">
-      <dt>晚餐</dt><dd>店名<span class="it-bk">要訂 21:30</span><div class="it-alt">備案</div></dd>
+      <dt>晚餐</dt><dd><div class="it-r"><span>店名<span class="it-bk">已訂 21:30</span><span class="it-kind">料理類型・地區</span></span><a class="it-map" href="Google Maps 網址" target="_blank" rel="noopener">地圖</a></div><div class="it-alt">備註</div></dd>
     </dl>
     <div class="it-note">備註</div>
     <button class="it-go" data-go="d1120">看這天的購物清單 →</button>   <!-- 有購物清單的日子才有 -->
@@ -72,9 +74,11 @@
   - `img`（對應 IMG key）或 `icon`（emoji）
   - `brand`、`name`、`note`、`codes`（型號陣列，可點擊放大）
   - `browse:true` → 顯示「逛逛」標籤（現場看款，不是指定商品）
-- `PLAN`：`[{ id:"d1120", date, dow, theme, stops:[{ place, area, items:[{ id, where }] }] }]`
+- `PLAN`：`[{ id:"d1120", date, dow, theme, note, stops:[{ place, area, items:[{ id, shop, where }] }] }]`
+  - 購物頁會依「店家」分組（`shopOf()`）：有 `shop` 就用 `shop`，否則取 `where` 第一個「・」前的文字（去掉括號），再不然用品牌
+  - `where` 第一個「・」後面的文字才會顯示成 📍 備註；`where:"x・補買"` 這種寫法表示店名用 `shop`、備註是「補買」
   - 同一商品可出現在多天（例如「沒買到的話 11/24 再找」），勾選狀態以商品 id 共用
-  - 新增日期時要同步：`PLAN`、`DAYS` 陣列、`.days` 按鈕列（目前 4 欄 grid）、行程頁的 `it-go` 按鈕
+  - 新增日期時要同步：`PLAN`、`DAYS` 陣列、`.days` 按鈕列（目前 5 欄 grid：全部、11/19、11/20、11/24、11/25）、行程頁的 `it-go` 按鈕
 - 勾選狀態存在 `localStorage`，key：`fukuoka-shopping-v1`
 - 網址 hash：`#shop`、`#d1120` 等可直接開到購物頁指定日期
 
